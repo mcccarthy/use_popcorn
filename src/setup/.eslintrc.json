@@ -1,0 +1,25 @@
+{
+    "parser": "babel-eslint",
+    "extends": [
+      "eslint:recommended",
+      "plugin:react/recommended",
+      "plugin:prettier/recommended"
+    ],
+    "plugins": ["react", "prettier"],
+    "env": {
+      "browser": true,
+      "es6": true,
+      "node": true
+    },
+    "rules": {
+      "prettier/prettier": ["error", { "singleQuote": true, "jsxSingleQuote": true }],
+      "react/jsx-max-props-per-line": [1, { "when": "always" }],
+      "react/jsx-first-prop-new-line": [1, "multiline"]
+    },
+    "settings": {
+      "react": {
+        "version": "detect"
+      }
+    }
+  }
+  
