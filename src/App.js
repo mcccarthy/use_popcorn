@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import React from 'react';
 import './index.css';
 
@@ -49,12 +49,44 @@ const tempWatchedData = [
   }
 ];
 
+const KEY = '1066f3d5';
+
 const average = (arr) =>
   arr.reduce((acc, cur, i, arr) => acc + cur / arr.length, 0);
 
 export default function App() {
-  const [movies, setMovies] = useState(tempMovieData);
-  const [watched, setWatched] = useState(tempWatchedData);
+  const [movies, setMovies] = useState([]);
+  const [watched, setWatched] = useState([]);
+  const [isLoading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const query = 'top gun';
+
+  useEffect(function () {
+    async function fetchMovies() {
+      try {
+        setLoading(true);
+        const res = await fetch(
+          `http://www.omdbapi.com/?apikey=${KEY}&s=${query}`
+        );
+
+        if (!res.ok) throw new Error('Failed to fetch movies');
+
+        const data = await res.json();
+
+        if (data.Response === 'False') throw new Error('Movie not found');
+
+        setMovies(data.Search);
+        console.log(data);
+      } catch (err) {
+        console.error(err.message);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchMovies();
+  }, []);
+
   return (
     <>
       <NavBar>
@@ -63,7 +95,10 @@ export default function App() {
       </NavBar>
       <Main>
         <Box>
-          <MovieList movies={movies} />
+          {/* {isLoading ? <LoadingSpinner /> : <MovieList movies={movies} />} */}
+          {isLoading && <LoadingSpinner />}
+          {!isLoading && !error && <MovieList movies={movies} />}
+          {error && <ErrorMessage message={error} />}
         </Box>
 
         <Box>
@@ -72,6 +107,21 @@ export default function App() {
         </Box>
       </Main>
     </>
+  );
+}
+export const LoadingSpinner = () => {
+  return (
+    <div className='loading-spinner'>
+      <div className='spinner'></div>
+    </div>
+  );
+};
+
+function ErrorMessage({ message }) {
+  return (
+    <p className='error'>
+      <span>⛔</span> {message}
+    </p>
   );
 }
 
