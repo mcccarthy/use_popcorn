@@ -19,7 +19,7 @@ export default function App() {
   const [error, setError] = useState('');
   const [selectedId, setSelectedId] = useState(null);
 
-  function handleSelectMoive(id) {
+  function handleSelectMovie(id) {
     setSelectedId((selectedId) => (id === selectedId ? null : id));
   }
 
@@ -27,41 +27,38 @@ export default function App() {
     setSelectedId(null);
   }
 
-  useEffect(
-    function () {
-      async function fetchMovies() {
-        try {
-          setLoading(true);
-          setError('');
-          const res = await fetch(
-            `http://www.omdbapi.com/?apikey=${KEY}&s=${query}`
-          );
-
-          if (!res.ok) throw new Error('Failed to fetch movies');
-
-          const data = await res.json();
-
-          if (data.Response === 'False') throw new Error('Movie not found');
-
-          setMovies(data.Search);
-        } catch (err) {
-          console.error(err.message);
-          setError(err.message);
-        } finally {
-          setLoading(false);
-        }
-      }
-
-      if (query.length <= 2) {
-        setMovies([]);
+  useEffect(() => {
+    async function fetchMovies() {
+      try {
+        setLoading(true); // Correct usage of setLoading
         setError('');
-        return;
-      }
+        const res = await fetch(
+          `http://www.omdbapi.com/?apikey=${KEY}&s=${query}`
+        );
 
-      fetchMovies();
-    },
-    [query]
-  );
+        if (!res.ok) throw new Error('Failed to fetch movies');
+
+        const data = await res.json();
+
+        if (data.Response === 'False') throw new Error('Movie not found');
+
+        setMovies(data.Search);
+      } catch (err) {
+        console.error(err.message);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    if (query.length <= 2) {
+      setMovies([]);
+      setError('');
+      return;
+    }
+
+    fetchMovies();
+  }, [query, setMovies]);
 
   return (
     <>
@@ -71,16 +68,14 @@ export default function App() {
       </NavBar>
       <Main>
         <Box>
-          {/* {isLoading ? <LoadingSpinner /> : <MovieList movies={movies} />} */}
           {isLoading && <Spinner />}
           {!isLoading && !error && (
-            <MovieList movies={movies} onSelectMovie={handleSelectMoive} />
+            <MovieList movies={movies} onSelectMovie={handleSelectMovie} />
           )}
           {error && <ErrorMessage message={error} />}
         </Box>
 
         <Box>
-          {isLoading && <Spinner />}
           {selectedId ? (
             <MovieDetails
               selectedId={selectedId}
@@ -89,7 +84,7 @@ export default function App() {
           ) : (
             <>
               <WatchedSummary watched={watched} />
-              <WatchedMoivesList watched={watched} />
+              <WatchedMoviesList watched={watched} />
             </>
           )}
         </Box>
@@ -97,6 +92,7 @@ export default function App() {
     </>
   );
 }
+
 function ErrorMessage({ message }) {
   return (
     <p className='error'>
@@ -159,27 +155,6 @@ function Box({ children }) {
   );
 }
 
-// function WatchedBox() {
-
-//   const [isOpen2, setIsOpen2] = useState(true);
-
-//   return (
-//     <div className='box'>
-//       <button
-//         className='btn-toggle'
-//         onClick={() => setIsOpen2((open) => !open)}>
-//         {isOpen2 ? '–' : '+'}
-//       </button>
-//       {isOpen2 && (
-//         <>
-//           <WatchedSummary watched={watched} />
-//           <WatchedMoivesList watched={watched} />
-//         </>
-//       )}
-//     </div>
-//   );
-// }
-
 function MovieList({ movies, onSelectMovie }) {
   return (
     <ul className='list list-movies'>
@@ -207,7 +182,7 @@ function Movie({ movie, onSelectMovie }) {
 
 function MovieDetails({ selectedId, onCloseMovie }) {
   const [movie, setMovie] = useState({});
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setLoading] = useState(false);
 
   const {
     Title: title,
@@ -230,53 +205,61 @@ function MovieDetails({ selectedId, onCloseMovie }) {
 
   useEffect(() => {
     async function getMovieDetails() {
-      setLoading(true);
+      setLoading(true); // Correct usage of setLoading
       const res = await fetch(
         `http://www.omdbapi.com/?apikey=${KEY}&i=${selectedId}`
       );
       const data = await res.json();
       setMovie(data);
-      setLoading(true);
+      setLoading(false);
     }
     getMovieDetails();
   }, [selectedId]);
 
   return (
     <div className='details'>
-      <header>
-        <button className='btn-back' onClick={onCloseMovie}>
-          <FontAwesomeIcon icon={faCircleLeft} style={{ color: '#6741D9' }} />
-        </button>
-        <img src={poster} alt={`${title} poster`} />
-        <div className='details-overview'>
-          <h2>{title || 'No Title Available'}</h2>
-          <p>
-            {year} &bull; {rated} &bull; {released}
-          </p>
-          <p>{runtime}</p>
-          <p>{genre}</p>
-          <p>
-            <span>🌟</span>
-            {imdbRating} IMDb rating
-          </p>
-        </div>
-      </header>
-
-      <section>
-        <div className='rating'>
-          <StarRating maxRating={10} size={24} />
-        </div>
-        <p>
-          <em>{plot || 'No plot available.'}</em>
-        </p>
-        <p>Starring {actors}</p>
-        <p>Directed by {director}</p>
-        <p>Written by {writer}</p>
-        <p>Language: {language}</p>
-        <p>Country: {country}</p>
-        <p>Awards: {awards}</p>
-        <p>Box Office: {boxOffice}</p>
-      </section>
+      {isLoading ? (
+        <Spinner />
+      ) : (
+        <>
+          <header>
+            <button className='btn-back' onClick={onCloseMovie}>
+              <FontAwesomeIcon
+                icon={faCircleLeft}
+                style={{ color: '#6741D9' }}
+              />
+            </button>
+            <img src={poster} alt={`${title} poster`} />
+            <div className='details-overview'>
+              <h2>{title || 'No Title Available'}</h2>
+              <p>
+                {year} &bull; {rated} &bull; {released}
+              </p>
+              <p>{runtime}</p>
+              <p>{genre}</p>
+              <p>
+                <span>🌟</span>
+                {imdbRating} IMDb rating
+              </p>
+            </div>
+          </header>
+          <section>
+            <div className='rating'>
+              <StarRating maxRating={10} size={24} />
+            </div>
+            <p>
+              <em>{plot || 'No plot available.'}</em>
+            </p>
+            <p>Starring {actors}</p>
+            <p>Directed by {director}</p>
+            <p>Written by {writer}</p>
+            <p>Language: {language}</p>
+            <p>Country: {country}</p>
+            <p>Awards: {awards}</p>
+            <p>Box Office: {boxOffice}</p>
+          </section>
+        </>
+      )}
     </div>
   );
 }
@@ -310,7 +293,7 @@ function WatchedSummary({ watched }) {
   );
 }
 
-function WatchedMoivesList({ watched }) {
+function WatchedMoviesList({ watched }) {
   return (
     <ul className='list'>
       {watched.map((movie) => (
