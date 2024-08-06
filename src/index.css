@@ -53,6 +53,12 @@ body {
   border-radius: 0.9rem;
 }
 
+.emoji-inner {
+  margin-bottom: 1rem;
+}
+.imd {
+  margin-top: 1rem;
+}
 .main {
   margin-top: 2.4rem;
   height: calc(100vh - 7.2rem - 3 * 2.4rem);
@@ -239,7 +245,7 @@ body {
   display: flex;
   align-items: center;
   gap: 2.4rem;
-  font-size: 1.6rem;
+  font-size: 1.2rem;
   font-weight: 600;
 }
 
