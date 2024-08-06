@@ -12,7 +12,7 @@ const average = (arr) =>
   arr.reduce((acc, cur, i, arr) => acc + cur / arr.length, 0);
 
 export default function App() {
-  const [query, setQuery] = useState('inception');
+  const [query, setQuery] = useState('');
   const [movies, setMovies] = useState([]);
   const [watched, setWatched] = useState([]);
   const [isLoading, setLoading] = useState(false);
@@ -36,24 +36,28 @@ export default function App() {
   }
 
   useEffect(() => {
+    const controller = new AbortController();
+
     async function fetchMovies() {
       try {
         setLoading(true); // Correct usage of setLoading
         setError('');
         const res = await fetch(
-          `http://www.omdbapi.com/?apikey=${KEY}&s=${query}`
+          `http://www.omdbapi.com/?apikey=${KEY}&s=${query}`,
+          { signal: controller.signal }
         );
 
         if (!res.ok) throw new Error('Failed to fetch movies');
-
         const data = await res.json();
-
         if (data.Response === 'False') throw new Error('Movie not found');
 
         setMovies(data.Search);
+        setError('');
       } catch (err) {
         console.error(err.message);
-        setError(err.message);
+        if (err.name === 'AbortError') {
+          setError(err.message);
+        }
       } finally {
         setLoading(false);
       }
@@ -64,8 +68,9 @@ export default function App() {
       setError('');
       return;
     }
-
+    handleCloseMovie();
     fetchMovies();
+    return () => controller.abort();
   }, [query, setMovies]);
 
   return (
@@ -234,6 +239,22 @@ function MovieDetails({ selectedId, onCloseMovie, onAddWatched, watched }) {
     onAddWatched(newWatchedMovie);
     onCloseMovie();
   }
+
+  useEffect(() => {
+    function callBack(e) {
+      if (e.key === 'Escape') {
+        onCloseMovie();
+      }
+    }
+
+    // Add the event listener
+    document.addEventListener('keydown', callBack);
+
+    // Cleanup function to remove the event listener
+    return () => {
+      document.removeEventListener('keydown', callBack);
+    };
+  }, [onCloseMovie]);
 
   useEffect(() => {
     async function getMovieDetails() {
