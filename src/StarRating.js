@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+
 const containerStyle = {
   display: 'flex',
   alignItems: 'center',
@@ -15,21 +16,24 @@ export default function StarRating({
   size = 48,
   className = '',
   messages = [],
-  defaultRating = 0
+  defaultRating = 0,
+  onSetRating
 }) {
   const [rating, setRating] = useState(defaultRating);
   const [tempRating, setTempRating] = useState(0);
 
   function handleRating(rating) {
     setRating(rating);
+    if (onSetRating) onSetRating(rating);
   }
 
   const textStyle = {
-    lineheight: '1',
+    lineHeight: '1',
     margin: '0',
     color,
     fontSize: `${size / 1.5}px`
   };
+
   return (
     <div style={containerStyle} className={className}>
       <div style={starContainerStyle}>
@@ -46,7 +50,6 @@ export default function StarRating({
         ))}
       </div>
       <p style={textStyle}>
-        {' '}
         {messages.length === maxRating
           ? messages[tempRating ? tempRating - 1 : rating - 1]
           : tempRating || rating || ''}

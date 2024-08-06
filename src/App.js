@@ -12,7 +12,7 @@ const average = (arr) =>
   arr.reduce((acc, cur, i, arr) => acc + cur / arr.length, 0);
 
 export default function App() {
-  const [query, setQuery] = useState('mr magoo');
+  const [query, setQuery] = useState('inception');
   const [movies, setMovies] = useState([]);
   const [watched, setWatched] = useState([]);
   const [isLoading, setLoading] = useState(false);
@@ -25,6 +25,10 @@ export default function App() {
 
   function handleCloseMovie() {
     setSelectedId(null);
+  }
+
+  function handleAddWatch(movie) {
+    setWatched((watched) => [...watched, movie]);
   }
 
   useEffect(() => {
@@ -80,6 +84,7 @@ export default function App() {
             <MovieDetails
               selectedId={selectedId}
               onCloseMovie={handleCloseMovie}
+              onAddWatched={handleAddWatch}
             />
           ) : (
             <>
@@ -180,9 +185,10 @@ function Movie({ movie, onSelectMovie }) {
   );
 }
 
-function MovieDetails({ selectedId, onCloseMovie }) {
+function MovieDetails({ selectedId, onCloseMovie, onAddWatched }) {
   const [movie, setMovie] = useState({});
   const [isLoading, setLoading] = useState(false);
+  const [userRating, setUserRating] = useState(null);
 
   const {
     Title: title,
@@ -203,9 +209,23 @@ function MovieDetails({ selectedId, onCloseMovie }) {
     BoxOffice: boxOffice
   } = movie;
 
+  function handleAdd() {
+    const newWatchedMovie = {
+      imdbID: selectedId,
+      title,
+      year,
+      poster,
+      imdbRating: Number(imdbRating),
+      userRating: Number(userRating),
+      runtime: Number(runtime.split(' ')[0])
+    };
+    onAddWatched(newWatchedMovie);
+    onCloseMovie();
+  }
+
   useEffect(() => {
     async function getMovieDetails() {
-      setLoading(true); // Correct usage of setLoading
+      setLoading(true);
       const res = await fetch(
         `http://www.omdbapi.com/?apikey=${KEY}&i=${selectedId}`
       );
@@ -245,7 +265,21 @@ function MovieDetails({ selectedId, onCloseMovie }) {
           </header>
           <section>
             <div className='rating'>
-              <StarRating maxRating={10} size={24} />
+              <StarRating
+                maxRating={10}
+                size={24}
+                onSetRating={setUserRating}
+              />
+              {userRating !== null && (
+                <>
+                  <button className='btn-add' onClick={handleAdd}>
+                    + Add to list
+                  </button>
+                  <p>
+                    Your rating: <span>{userRating}</span>
+                  </p>
+                </>
+              )}
             </div>
             <p>
               <em>{plot || 'No plot available.'}</em>
@@ -306,8 +340,8 @@ function WatchedMoviesList({ watched }) {
 function WatchedMovie({ movie }) {
   return (
     <li>
-      <img src={movie.Poster} alt={`${movie.Title} poster`} />
-      <h3>{movie.Title}</h3>
+      <img src={movie.poster} alt={`${movie.title} poster`} />
+      <h3>{movie.title}</h3>
       <div>
         <p>
           <span>⭐️</span>
